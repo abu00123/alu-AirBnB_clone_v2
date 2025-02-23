@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from fabric.operations import local
 from datetime import datetime
 import os
