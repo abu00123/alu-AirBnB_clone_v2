@@ -1,25 +1,20 @@
+from fabric.operations import local
 from datetime import datetime
 import os
-import subprocess
 
 def do_pack():
-    """
-    Creates a .tgz archive from the contents of the web_static folder.
-    """
+    """Generates a .tgz archive from the contents of the web_static folder."""
     # Create the versions directory if it does not exist
-    if not os.path.exists("versions"):
-        os.makedirs("versions")
+    os.makedirs("versions", exist_ok=True)
     
-    # Generate the archive name using the current timestamp
+    # Generate archive name with timestamp
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     archive_name = f"versions/web_static_{timestamp}.tgz"
     
-    # Create the archive using tar
+    # Create the archive
     print(f"Packing web_static to {archive_name}")
-    try:
-        result = subprocess.run(["tar", "-cvzf", archive_name, "web_static"], check=True)
-    except subprocess.CalledProcessError:
-        return None
+    result = local(f"tar -cvzf {archive_name} web_static", capture=True)
     
-    return archive_name
+    # Return the archive path if successful, otherwise return None
+    return archive_name if result.succeeded else None
 
