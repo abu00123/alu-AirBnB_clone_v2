@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# Sets up a web server for deployment of web_static.
+# This script sets up the web servers for deploying web_static
 
 # Install Nginx if it is not already installed
-if ! command -v nginx &> /dev/null; then
-    sudo apt-get update
-    sudo apt-get install -y nginx
+if ! command -v nginx &> /dev/null
+then
+    sudo apt update -y
+    sudo apt install nginx -y
 fi
 
-# Create necessary directories if they don't exist
+# Create required directories if they don’t exist
 sudo mkdir -p /data/web_static/releases/test/
 sudo mkdir -p /data/web_static/shared/
 
-# Create a fake HTML file for testing
+# Create a fake index.html file for testing
 echo "<html>
   <head>
   </head>
@@ -20,17 +21,23 @@ echo "<html>
   </body>
 </html>" | sudo tee /data/web_static/releases/test/index.html > /dev/null
 
-# Create or recreate the symbolic link
-sudo ln -sf /data/web_static/releases/test/ /data/web_static/current
+# Remove the symbolic link if it exists and create a new one
+sudo rm -rf /data/web_static/current
+sudo ln -s /data/web_static/releases/test/ /data/web_static/current
 
-# Set ownership of the /data/ folder to ubuntu user and group
+# Give ownership of the /data/ directory to ubuntu user and group
 sudo chown -R ubuntu:ubuntu /data/
 
-# Update Nginx configuration to serve the content of /data/web_static/current/
-sudo sed -i '/listen 80 default_server;/a \\n\tlocation /hbnb_static/ {\n\t\talias /data/web_static/current/;\n\t}' /etc/nginx/sites-available/default
+# Update Nginx configuration to serve the content
+nginx_config="/etc/nginx/sites-available/default"
 
-# Restart Nginx to apply changes
-sudo service nginx restart
+sudo sed -i "/server_name _;/a \\
+        location /hbnb_static {\\
+            alias /data/web_static/current/;\\
+        }" $nginx_config
 
-# Exit successfully
-exit 0
+# Restart Nginx to apply the changes
+sudo systemctl restart nginx
+
+echo "Web server setup complete!"
+
