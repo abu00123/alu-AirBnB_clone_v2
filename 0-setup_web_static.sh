@@ -1,48 +1,42 @@
 #!/bin/bash
-
-# Exit immediately if a command exits with a non-zero status
-set -e
+# Script to set up web servers for deployment of web_static
 
 # Install Nginx if not already installed
 if ! command -v nginx &> /dev/null; then
-    sudo apt update -y
-    sudo apt install nginx -y
+    sudo apt update
+    sudo apt install -y nginx
 fi
 
-# Create necessary directories
-sudo mkdir -p /data/web_static/releases/test/
-sudo mkdir -p /data/web_static/shared/
+# Create required directories
+sudo mkdir -p /data/web_static/releases/test /
+data/web_static/shared
 
-# Create a fake HTML file for testing
-echo "<html>
+# Create a fake HTML file
+sudo tee /data/web_static/releases/test/index.html > /dev/null <<EOF
+<html>
   <head>
   </head>
   <body>
     Holberton School
   </body>
-</html>" | sudo tee /data/web_static/releases/test/index.html > /dev/null
+</html>
+EOF
 
-# Create (or recreate) the symbolic link
-sudo ln -sf /data/web_static/releases/test/ /data/web_static/current
+# Create (or recreate) symbolic link
+sudo rm -rf /data/web_static/current
+sudo ln -s /data/web_static/releases/test /data/web_static/current
 
-# Give ownership to the ubuntu user and group
+# Give ownership of /data/ to ubuntu user and group
 sudo chown -R ubuntu:ubuntu /data/
 
-# Update Nginx configuration to serve web_static
-nginx_conf="\
-    location /hbnb_static/ {
-        alias /data/web_static/current/;
-    }"
-
-# Add Nginx configuration if not already present
+# Update Nginx configuration to serve /data/web_static/current/ under /hbnb_static
+config="location /hbnb_static/ {\n\talias /data/web_static/current/;\n}"
 if ! grep -q "location /hbnb_static/" /etc/nginx/sites-available/default; then
-    sudo sed -i "/server_name _;/a\\$nginx_conf" /etc/nginx/sites-available/default
+    sudo sed -i "/server_name _;/a \t$config" /etc/nginx/sites-available/default
 fi
 
-# Restart Nginx to apply changes
-sudo systemctl restart nginx
+# Restart Nginx
+sudo service nginx restart
 
-# Exit successfully
-echo "Web static setup completed successfully."
 exit 0
 
