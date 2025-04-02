@@ -28,14 +28,15 @@ def do_pack():
 
         # Create the .tgz archive
         print("Packing web_static to {}".format(archive_path))
-        result = local("tar -cvzf {} web_static".format(archive_path))
+        cmd = "tar -cvzf {} web_static".format(archive_path)
+        result = local(cmd)
 
         # Check if the archive was created successfully
         if result.succeeded:
             size = os.path.getsize(archive_path)
-            print("web_static packed: {} -> {}Bytes".format(archive_path, size))
+            print("web_static packed: {} -> {}Bytes".
+                  format(archive_path, size))
             return archive_path
-        else:
-            return None
-    except Exception as e:
+        return None
+    except Exception:
         return None
